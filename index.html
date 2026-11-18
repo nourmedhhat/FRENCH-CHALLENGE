@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FRENCH CHALLENGE</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101522;color:white;font-family:Arial,sans-serif;text-align:center}
+header{background:#202c43;padding:22px;border-bottom:3px solid gold}
+h1{color:gold;letter-spacing:3px}
+.container{max-width:850px;margin:25px auto;padding:15px}
+.box{background:#202c43;padding:22px;border-radius:15px;margin:15px 0}
+input{padding:13px;border:0;border-radius:8px;margin:7px;width:85%;max-width:300px}
+button{padding:13px 18px;margin:7px;border:0;border-radius:10px;cursor:pointer;font-size:17px;font-weight:bold}
+button:hover{opacity:.85}
+.choice{background:gold;color:#111;font-size:22px}
+.start{background:#16a878;color:white;min-width:150px}
+.hidden{display:none!important}
+#message{font-size:21px;color:gold;margin:18px}
+#question{font-size:23px;color:gold}
+.answer{display:block;width:90%;max-width:400px;margin:10px auto;background:#34435e;color:white}
+#score{color:#8df5c1}
+video{width:100%;max-width:760px;max-height:65vh;background:#000;border-radius:14px}
+.intro-title{color:gold;margin-top:5px}
+@media(max-width:600px){.box{padding:15px}h1{font-size:28px}}
+</style>
+</head>
+<body>
+
+<header>
+<h1>FRENCH CHALLENGE</h1>
+<p>THE ULTIMATE FRENCH COMPETITION</p>
+</header>
+
+<div class="container">
+
+<!-- شاشة الفيديو الافتتاحي -->
+<section class="box" id="intro">
+<h2 class="intro-title">استعدوا للمنافسة!</h2>
+<video id="introVideo" controls autoplay muted playsinline>
+  <source src="intro.mp4" type="video/mp4">
+  متصفحك لا يدعم تشغيل الفيديو.
+</video>
+<br>
+<button class="start" onclick="enterGame()">START</button>
+</section>
+
+<!-- شاشة إدخال أسماء اللاعبين -->
+<div class="box hidden" id="setup">
+<h2>🏆 مباراة جديدة</h2>
+<input id="p1" placeholder="اسم اللاعب الأول">
+<br>
+<input id="p2" placeholder="اسم اللاعب الثاني">
+<br>
+<button class="start" onclick="startGame()">ابدأ المباراة</button>
+</div>
+
+<div class="box hidden" id="game">
+<h2 id="match"></h2>
+<h3 id="round"></h3>
+<h3 id="turn"></h3>
+<div id="choices">
+<button class="choice" onclick="choose('rock')">✊ Rock</button>
+<button class="choice" onclick="choose('paper')">✋ Paper</button>
+<button class="choice" onclick="choose('scissors')">✌️ Scissors</button>
+</div>
+<div id="message"></div>
+<div id="quiz" class="hidden">
+<h3 id="unit"></h3>
+<h2 id="question"></h2>
+<div id="answers"></div>
+</div>
+<button id="next" class="start hidden" onclick="nextRound()">الجولة التالية</button>
+<h3 id="score"></h3>
+</div>
+
+<div class="box hidden" id="result">
+<h2>🏆 نتيجة المباراة</h2>
+<h2 id="winner"></h2>
+<button class="start" onclick="newMatch()">مباراة جديدة</button>
+</div>
+</div>
+
+<script>
+const questions = [
+{u:"Module 1 - Mes vêtements",q:"Que signifie « un pantalon » ?",a:["بنطلون","قميص","حذاء"],c:0},
+{u:"Module 1 - Mes vêtements",q:"Que signifie « une robe » ?",a:["قبعة","فستان","جوارب"],c:1},
+{u:"Module 1 - Mes vêtements",q:"Que signifie « rouge » ?",a:["أزرق","أخضر","أحمر"],c:2},
+{u:"Module 1 - Mes vêtements",q:"Que signifie « acheter » ?",a:["يشتري","يلعب","يأكل"],c:0},
+{u:"Module 1 - Mes vêtements",q:"Que signifie « porter » ?",a:["يشرب","يرتدي","يذهب"],c:1},
+{u:"Module 1 - Mes vêtements",q:"Que signifie « une veste » ?",a:["جاكيت","تنورة","حقيبة"],c:0},
+{u:"Module 1 - Mes vêtements",q:"Que signifie « bleu » ?",a:["أحمر","أصفر","أزرق"],c:2},
+{u:"Module 1 - Mes vêtements",q:"Que signifie « des chaussures » ?",a:["أحذية","قمصان","قبعات"],c:0},
+{u:"Module 2 - Chez moi",q:"Que signifie « la maison » ?",a:["المدرسة","المنزل","الشارع"],c:1},
+{u:"Module 2 - Chez moi",q:"Que signifie « la chambre » ?",a:["غرفة النوم","المطبخ","الحديقة"],c:0},
+{u:"Module 2 - Chez moi",q:"Que signifie « la cuisine » ?",a:["الحمام","المطبخ","غرفة النوم"],c:1},
+{u:"Module 2 - Chez moi",q:"Que signifie « le salon » ?",a:["غرفة المعيشة","الشارع","المتجر"],c:0},
+{u:"Module 2 - Chez moi",q:"Que signifie « sur » ?",a:["تحت","بجانب","فوق"],c:2},
+{u:"Module 2 - Chez moi",q:"Que signifie « sous » ?",a:["تحت","فوق","داخل"],c:0},
+{u:"Module 2 - Chez moi",q:"Que signifie « le lit » ?",a:["كرسي","سرير","باب"],c:1},
+{u:"Module 2 - Chez moi",q:"Que signifie « une table » ?",a:["طاولة","نافذة","خزانة"],c:0},
+{u:"Module 3 - Le voyage",q:"Que signifie « le train » ?",a:["سيارة","قطار","طائرة"],c:1},
+{u:"Module 3 - Le voyage",q:"Que signifie « l'avion » ?",a:["طائرة","قطار","حافلة"],c:0},
+{u:"Module 3 - Le voyage",q:"Que signifie « la voiture » ?",a:["دراجة","سيارة","سفينة"],c:1},
+{u:"Module 3 - Le voyage",q:"Que signifie « voyager » ?",a:["يسافر","ينام","يكتب"],c:0},
+{u:"Module 3 - Le voyage",q:"Que signifie « la gare » ?",a:["المطار","محطة القطار","المطعم"],c:1},
+{u:"Module 3 - Le voyage",q:"Que signifie « aller » ?",a:["يذهب","يأكل","يلبس"],c:0},
+{u:"Module 3 - Le voyage",q:"Que signifie « le bus » ?",a:["قطار","حافلة","طائرة"],c:1},
+{u:"Module 4 - Ma journée",q:"Que signifie « le matin » ?",a:["المساء","الصباح","الليل"],c:1},
+{u:"Module 4 - Ma journée",q:"Que signifie « le soir » ?",a:["الصباح","الظهر","المساء"],c:2},
+{u:"Module 4 - Ma journée",q:"Que signifie « se lever » ?",a:["يستيقظ","يأكل","يشرب"],c:0},
+{u:"Module 4 - Ma journée",q:"Que signifie « dormir » ?",a:["يلعب","ينام","يذهب"],c:1},
+{u:"Module 4 - Ma journée",q:"Que signifie « déjeuner » ?",a:["يتناول الغداء","يتناول العشاء","يستيقظ"],c:0},
+{u:"Module 4 - Ma journée",q:"Que signifie « l'heure » ?",a:["اليوم","الساعة","الشهر"],c:1},
+{u:"Module 4 - Ma journée",q:"Que signifie « aujourd'hui » ?",a:["أمس","غدًا","اليوم"],c:2},
+{u:"Module 5 - Dans ma ville",q:"Que signifie « la ville » ?",a:["المدينة","المنزل","المدرسة"],c:0},
+{u:"Module 5 - Dans ma ville",q:"Que signifie « l'hôpital » ?",a:["المطعم","المستشفى","المتجر"],c:1},
+{u:"Module 5 - Dans ma ville",q:"Que signifie « la pharmacie » ?",a:["الصيدلية","الحديقة","المحطة"],c:0},
+{u:"Module 5 - Dans ma ville",q:"Que signifie « à droite » ?",a:["إلى اليسار","إلى الأمام","إلى اليمين"],c:2},
+{u:"Module 5 - Dans ma ville",q:"Que signifie « à gauche » ?",a:["إلى اليسار","إلى اليمين","إلى الخلف"],c:0},
+{u:"Module 5 - Dans ma ville",q:"Que signifie « le magasin » ?",a:["المتجر","المدرسة","الحديقة"],c:0},
+{u:"Module 5 - Dans ma ville",q:"Que signifie « la rue » ?",a:["الشارع","الغرفة","المطبخ"],c:0},
+{u:"Module 6 - Qu'est-ce que tu manges ?",q:"Que signifie « le pain » ?",a:["الجبن","الخبز","الحليب"],c:1},
+{u:"Module 6 - Qu'est-ce que tu manges ?",q:"Que signifie « le lait » ?",a:["الماء","العصير","الحليب"],c:2},
+{u:"Module 6 - Qu'est-ce que tu manges ?",q:"Que signifie « une pomme » ?",a:["تفاحة","موزة","برتقالة"],c:0},
+{u:"Module 6 - Qu'est-ce que tu manges ?",q:"Que signifie « le fromage » ?",a:["الخبز","الجبن","اللحم"],c:1},
+{u:"Module 6 - Qu'est-ce que tu manges ?",q:"Que signifie « boire » ?",a:["يأكل","يشرب","يشتري"],c:1},
+{u:"Module 6 - Qu'est-ce que tu manges ?",q:"Que signifie « manger » ?",a:["يأكل","ينام","يسافر"],c:0}
+];
+
+let unused=[...questions],matchNumber=1,roundNumber=1,names=[];
+let choices=[],currentPlayer=0,points=[0,0],roundWins=[0,0],questionOwner=-1;
+
+function enterGame(){
+ document.getElementById("intro").classList.add("hidden");
+ document.getElementById("setup").classList.remove("hidden");
+ document.getElementById("introVideo").pause();
+}
+function startGame(){
+ names=[
+  document.getElementById("p1").value.trim()||"اللاعب الأول",
+  document.getElementById("p2").value.trim()||"اللاعب الثاني"
+ ];
+ document.getElementById("setup").classList.add("hidden");
+ document.getElementById("result").classList.add("hidden");
+ document.getElementById("game").classList.remove("hidden");
+ roundNumber=1;points=[0,0];roundWins=[0,0];updateGame();
+}
+function updateGame(){
+ choices=[];currentPlayer=0;
+ document.getElementById("match").innerText="المباراة رقم "+matchNumber;
+ document.getElementById("round").innerText="الجولة "+roundNumber+" من 3";
+ document.getElementById("turn").innerText="دور اللاعب: "+names[0];
+ document.getElementById("choices").classList.remove("hidden");
+ document.getElementById("quiz").classList.add("hidden");
+ document.getElementById("next").classList.add("hidden");
+ document.getElementById("message").innerText="";
+ updateScore();
+}
+function updateScore(){
+ document.getElementById("score").innerText=names[0]+": "+points[0]+" نقطة | "+names[1]+": "+points[1]+" نقطة";
+}
+function choose(choice){
+ choices.push(choice);
+ if(currentPlayer===0){currentPlayer=1;document.getElementById("turn").innerText="دور اللاعب: "+names[1];}
+ else showResult();
+}
+function showResult(){
+ document.getElementById("choices").classList.add("hidden");
+ let a=choices[0],b=choices[1];
+ if(a===b){questionOwner=-1;document.getElementById("message").innerText="🤝 تعادل! لا يوجد سؤال.";showNext();return;}
+ let firstWins=(a==="rock"&&b==="scissors")||(a==="paper"&&b==="rock")||(a==="scissors"&&b==="paper");
+ questionOwner=firstWins?0:1;roundWins[questionOwner]++;
+ document.getElementById("message").innerText="🏆 الفائز بالجولة: "+names[questionOwner];
+ askQuestion();
+}
+function askQuestion(){
+ if(unused.length===0)unused=[...questions];
+ let index=Math.floor(Math.random()*unused.length),q=unused.splice(index,1)[0];
+ document.getElementById("unit").innerText=q.u;
+ document.getElementById("question").innerText=q.q;
+ let box=document.getElementById("answers");box.innerHTML="";
+ q.a.forEach((answer,index)=>{
+  let btn=document.createElement("button");btn.className="answer";btn.innerText=answer;
+  btn.onclick=()=>checkAnswer(index,q.c);box.appendChild(btn);
+ });
+ document.getElementById("quiz").classList.remove("hidden");
+}
+function checkAnswer(selected,correct){
+ document.querySelectorAll(".answer").forEach(btn=>btn.disabled=true);
+ if(selected===correct){points[questionOwner]++;document.getElementById("message").innerText="✅ إجابة صحيحة! نقطة واحدة.";}
+ else document.getElementById("message").innerText="❌ إجابة خاطئة! لا توجد نقطة.";
+ document.getElementById("quiz").classList.add("hidden");updateScore();showNext();
+}
+function showNext(){document.getElementById("next").classList.remove("hidden");}
+function nextRound(){
+ if(roundNumber<3){roundNumber++;updateGame();}
+ else finishMatch();
+}
+function finishMatch(){
+ document.getElementById("game").classList.add("hidden");
+ document.getElementById("result").classList.remove("hidden");
+ let result=roundWins[0]>roundWins[1]?"🏆 الفائز: "+names[0]:roundWins[1]>roundWins[0]?"🏆 الفائز: "+names[1]:"🤝 المباراة انتهت بالتعادل!";
+ document.getElementById("winner").innerText=result+"\n"+names[0]+": "+points[0]+" نقطة | "+names[1]+": "+points[1]+" نقطة";
+}
+function newMatch(){
+ matchNumber++;
+ document.getElementById("result").classList.add("hidden");
+ document.getElementById("setup").classList.remove("hidden");
+ document.getElementById("p1").value="";
+ document.getElementById("p2").value="";
+}
+</script>
+</body>
+</html>
